@@ -18,19 +18,20 @@
 # limitations under the License.
 #
 
-node['python']['major_version'], \
-node['python']['minor_version'], \
-node['python']['micro_version'] = 
+node.set['python']['major_version'], \
+node.set['python']['minor_version'], \
+node.set['python']['micro_version'] = 
   node['python']['version'].split('.').map {|v| v.to_i}
 
 if node['python']['major_version'] > 2 and platform_family?('debian')
-  node['python']['version_suffix'] = node['python']['major_version'].to_s
+  python_version_suffix = node['python']['major_version'].to_s
   if node['python']['minor_version']
-    node['python']['version_suffix'] += ".#{node['python']['minor_version']}"
+    python_version_suffix += ".#{node['python']['minor_version']}"
   end
 else
-  node['python']['version_suffix'] = ''
+  python_version_suffix = ''
 end
+node.set['python']['version_suffix'] = python_version_suffix
 
 major_version = node['platform_version'].split('.').first.to_i
 
@@ -39,7 +40,7 @@ major_version = node['platform_version'].split('.').first.to_i
 if platform_family?('rhel') && major_version < 6
   include_recipe 'yum::epel'
   python_pkgs = ["python26", "python26-devel"]
-  node['python']['binary'] = "/usr/bin/python26"
+  node.set['python']['binary'] = "/usr/bin/python26"
 else
   pv = node['python']['version_suffix']
   python_pkgs = value_for_platform_family(
@@ -49,7 +50,8 @@ else
                   "smartos" => ["python27"],
                   "default" => ["python","python-dev"]
                 )
-  node['python']['binary'] += node['python']['version_suffix']
+  node.set['python']['binary'] = \
+    node['python']['binary'] + node['python']['version_suffix']
 end
 
 python_pkgs.each do |pkg|
