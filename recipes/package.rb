@@ -18,6 +18,20 @@
 # limitations under the License.
 #
 
+node['python']['major_version'], \
+node['python']['minor_version'], \
+node['python']['micro_version'] = 
+  node['python']['version'].split('.').map {|v| v.to_i}
+
+if node['python']['major_version'] > 2 and platform_family?('debian')
+  node['python']['version_suffix'] = node['python']['major_version'].to_s
+  if node['python']['minor_version']
+    node['python']['version_suffix'] += ".#{node['python']['minor_version']}"
+  end
+else
+  node['python']['version_suffix'] = ''
+end
+
 major_version = node['platform_version'].split('.').first.to_i
 
 # COOK-1016 Handle RHEL/CentOS namings of python packages, by installing EPEL
@@ -27,9 +41,7 @@ if platform_family?('rhel') && major_version < 6
   python_pkgs = ["python26", "python26-devel"]
   node['python']['binary'] = "/usr/bin/python26"
 else
-  python_version = node['python']['version']
-  python_major_version = python_version.split('.').first.to_i
-  pv = python_major_version > 2 ? python_version : ''
+  pv = node['python']['version_suffix']
   python_pkgs = value_for_platform_family(
                   "debian" => ["python#{pv}","python#{pv}-dev"],
                   "rhel" => ["python","python-devel"],
@@ -37,6 +49,7 @@ else
                   "smartos" => ["python27"],
                   "default" => ["python","python-dev"]
                 )
+  node['python']['binary'] += node['python']['version_suffix']
 end
 
 python_pkgs.each do |pkg|
