@@ -27,8 +27,11 @@ if platform_family?('rhel') && major_version < 6
   python_pkgs = ["python26", "python26-devel"]
   node['python']['binary'] = "/usr/bin/python26"
 else
+  python_version = node['python']['version']
+  python_major_version = python_version.split('.').first.to_i
+  pv = python_major_version > 2 ? python_version : ''
   python_pkgs = value_for_platform_family(
-                  "debian" => ["python","python-dev"],
+                  "debian" => ["python#{pv}","python#{pv}-dev"],
                   "rhel" => ["python","python-devel"],
                   "freebsd" => ["python"],
                   "smartos" => ["python27"],
